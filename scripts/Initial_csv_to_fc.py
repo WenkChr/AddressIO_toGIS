@@ -68,7 +68,6 @@ def merge_all_in_fds(path_to_gdb, outGDB, common_essential_fields,
         for f in fc_files_w_path: delete_non_essential_fields(f, common_essential_fields)
         
         arcpy.Merge_management(fc_files_w_path, os.path.join(outGDB, prov + '_all'))
-    
 
 # Constants
 spatial_ref = arcpy.SpatialReference('WGS 1984')
