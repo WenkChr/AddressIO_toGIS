@@ -39,9 +39,9 @@ with open(statetxt, 'wb') as txt:
     for line in urllib.request.urlopen(stateURL):
         txt.write(line)
 stateDF = pd.read_csv(statetxt, sep='\t')
-
-stateFields = ['source','cache','sample','geometry', 'type', 'address count', 'version', 'fingerprint', 'cache time', 'processed', 
-                'process time', 'process hash', 'output', 'attribution required', 'attribution name', 'share-alike', 'code version']
+print('Calculating countryCode field')
+stateDF['countryCode'] = stateDF.source.apply(lambda x: pd.Series(str(x).split('/')[0]))
+stateDF = stateDF.loc[stateDF.countryCode == 'ca']
 #stateDF = pd.read_csv(statetxt, sep='delimiter', engine='python', header=None)
 
 print(stateDF.head())
