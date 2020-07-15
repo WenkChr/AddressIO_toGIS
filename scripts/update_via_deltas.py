@@ -99,17 +99,17 @@ for zfile in rows_to_download:
 provUpdateCount = {'ab' : 0, 'bc' : 0, 'mb' : 0, 'nb' : 0, 'nl' : 0, 'nl' : 0, 'ns' : 0, 'nt' : 0, 'on' : 0, 'pe' : 0, 'qc' : 0,
             'sk' : 0, 'yt' : 0, 'nu' : 0} # Track the number of updated csv's in each province
 for dlfile in intZips:
-    allPathParts = splitall(dlfile) # Splits path down to component parts
     with ZipFile(dlfile) as zipObj:
         for fileName in zipObj.namelist():
             if fileName.endswith('.csv'):
+                allPathParts = splitall(fileName) # Splits path down to component parts
                 print(f'Extracting: {fileName}')
-                with open(fileName) as zf, open(os.path.join(Old_Data, allPathParts[-2], os.path.basename(fileName))) as of:
-                    shutil.copy(zf, of)
+                with zipObj.open(fileName) as zf, open(os.path.join(Old_Data, 'ca', allPathParts[-2], allPathParts[-1]), 'wb') as of:
+                    shutil.copyfileobj(zf, of)
                 provUpdateCount[allPathParts[-2]] += 1
 
+print(f' Number of location files updates: {len(rows_to_download)}')
+print('Per province update counts: /n', provUpdateCount)
 
-print(len(rows_to_download))
-print(rows_to_download)
 
 print('DONE!')
