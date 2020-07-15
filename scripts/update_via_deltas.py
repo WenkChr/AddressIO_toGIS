@@ -1,8 +1,15 @@
-import os, sys,  requests, time, urllib
+import os, sys,  requests, time, urllib, shutil
 import pandas as pd
 from zipfile import ZipFile
 
-
+#--------------------------------------------------------------------------------------------------------------------------------------
+''' Workflow Overview:
+1.) Download state.txt from openaddressIO and compare the address counts for each Canada file to the counts for the current csv files
+2.) If the counts are different then flag the file for updating
+3.) Download all flagged files and update the csv file in the current file structure
+4.) Recreate the point file and the csd coverage files for the provinces that have updates address files
+'''
+#--------------------------------------------------------------------------------------------------------------------------------------
 # function definitions
 def check_url_exists(url):
     import urllib3
@@ -75,14 +82,31 @@ for row in stateDF.itertuples():
 # Download zips with files that need to be updated
 intZips = [] # list of paths to intermediate zips
 for zfile in rows_to_download:
+    zipAllPathParts = splitall(zfile)
+    if not os.path.exists(os.path.join(intermediateZipFolder, zipAllPathParts[-2])): # If prov sub directory does not exists create it
+        os.makedirs(os.path.join(intermediateZipFolder, zipAllPathParts[-2])) # make prov sub directory for exported files
     print(f'Downloading: {os.path.split(zfile)[-1]}')
-    urlSplit = os.path.split(zfile)
     r= requests.get(zfile, stream= True)
-    downPath = os.path.join(outPath, 'IntermediateZips', os.path.split(zfile)[-1])
+    downPath = os.path.join(intermediateZipFolder, zipAllPathParts[-2], zipAllPathParts[-1])
+    if zipAllPathParts[-1] == 'province.zip':
+        downPath = os.path.join(intermediateZipFolder, zipAllPathParts[-2], f'{zipAllPathParts[-2]}_{zipAllPathParts[-1]}')
     with open( downPath, 'wb') as fd:
         for chunk in r.iter_content(chunk_size= 128):
             fd.write(chunk)
     intZips.append(downPath)     
+
+#Unzip the new csv's and add only the csv to the file structure
+provUpdateCount = {'ab' : 0, 'bc' : 0, 'mb' : 0, 'nb' : 0, 'nl' : 0, 'nl' : 0, 'ns' : 0, 'nt' : 0, 'on' : 0, 'pe' : 0, 'qc' : 0,
+            'sk' : 0, 'yt' : 0, 'nu' : 0} # Track the number of updated csv's in each province
+for dlfile in intZips:
+    allPathParts = splitall(dlfile) # Splits path down to component parts
+    with ZipFile(dlfile) as zipObj:
+        for fileName in zipObj.namelist():
+            if fileName.endswith('.csv'):
+                print(f'Extracting: {fileName}')
+                with open(fileName) as zf, open(os.path.join(Old_Data, allPathParts[-2], os.path.basename(fileName))) as of:
+                    shutil.copy(zf, of)
+                provUpdateCount[allPathParts[-2]] += 1
 
 
 print(len(rows_to_download))
