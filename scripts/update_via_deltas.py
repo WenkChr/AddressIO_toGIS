@@ -96,20 +96,23 @@ for zfile in rows_to_download:
     intZips.append(downPath)     
 
 #Unzip the new csv's and add only the csv to the file structure
-provUpdateCount = {'ab' : 0, 'bc' : 0, 'mb' : 0, 'nb' : 0, 'nl' : 0, 'nl' : 0, 'ns' : 0, 'nt' : 0, 'on' : 0, 'pe' : 0, 'qc' : 0,
-            'sk' : 0, 'yt' : 0, 'nu' : 0} # Track the number of updated csv's in each province
+provstoupdate = [] # Track the provinces that need to be updated
 for dlfile in intZips:
     with ZipFile(dlfile) as zipObj:
         for fileName in zipObj.namelist():
             if fileName.endswith('.csv'):
                 allPathParts = splitall(fileName) # Splits path down to component parts
                 print(f'Extracting: {fileName}')
+                if allPathParts[-1] == 'province.csv': #get rid of repeated province name by adding prov code
+                    print(f'province.csv renamed to {allPathParts[-2]}_{allPathParts[-1]}')
+                    allPathParts[-1] = f'{allPathParts[-2]}_{allPathParts[-1]}'
                 with zipObj.open(fileName) as zf, open(os.path.join(Old_Data, 'ca', allPathParts[-2], allPathParts[-1]), 'wb') as of:
                     shutil.copyfileobj(zf, of)
-                provUpdateCount[allPathParts[-2]] += 1
+                provstoupdate.append(allPathParts[-2])
 
 print(f' Number of location files updates: {len(rows_to_download)}')
-print('Per province update counts: /n', provUpdateCount)
+print('Per provinces to be updated: ', provstoupdate)
+
 
 
 print('DONE!')
