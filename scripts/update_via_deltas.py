@@ -1,6 +1,7 @@
-import os, sys,  requests, time, urllib, shutil
+import os, sys,  requests, time, urllib, shutil, glob
 import pandas as pd
 from zipfile import ZipFile
+from arcgis import GeoAccessor
 
 #--------------------------------------------------------------------------------------------------------------------------------------
 ''' Workflow Overview:
@@ -44,6 +45,7 @@ OpenIO_zip = "https://data.openaddresses.io/openaddr-collected-north_america.zip
 intermediateZipFolder = 'H:\\AddressIO_Home\\IntermediateZips'
 Old_Data = 'H:\AddressIO_Home\openaddr-collected-north_america'
 outPath = 'H:\\AddressIO_Home' # This should be where the full AddressIO data should be located (unzipped)
+outGDB = r'H:\AddressIO_Home\workingGDB.gdb' #The GDB where the address range data is currently stored
 stateURL = r'http://results.openaddresses.io/state.txt'
 #------------------------------------------------------------------------------------------------------------------------------------
 # function calls
@@ -111,8 +113,22 @@ for dlfile in intZips:
                 provstoupdate.append(allPathParts[-2])
 
 print(f' Number of location files updates: {len(rows_to_download)}')
-print('Per provinces to be updated: ', provstoupdate)
 
-
+print('Province fcs to be updated: ', provstoupdate)
+for prov in provstoupdate:
+    print('Updating:', prov)
+    os.chdir(os.path.join(Old_Data, 'ca', prov))
+    csvList = glob.glob(f'*.csv')
+    print(f'Reading {len(csvList)} csv files into memory')
+    dfFromEachFile = []
+    for f in csvList:
+        df = pd.read_csv(f, index_col= None, header=0)
+        df['source'] = f
+        dfFromEachFile.append(df)
+    print('Concatonating all regional datasets')
+    concatDF = pd.concat(dfFromEachFile, ignore_index= True)
+    spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LAT', y_column= 'LON')
+    print('Exporting full dataset')
+    spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all'), overwrite= True)
 
 print('DONE!')
