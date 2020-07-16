@@ -110,7 +110,8 @@ for dlfile in intZips:
                     allPathParts[-1] = f'{allPathParts[-2]}_{allPathParts[-1]}'
                 with zipObj.open(fileName) as zf, open(os.path.join(Old_Data, 'ca', allPathParts[-2], allPathParts[-1]), 'wb') as of:
                     shutil.copyfileobj(zf, of)
-                provstoupdate.append(allPathParts[-2])
+                if allPathParts[-2] not in provstoupdate:
+                    provstoupdate.append(allPathParts[-2])
 
 print(f' Number of location files updates: {len(rows_to_download)}')
 
