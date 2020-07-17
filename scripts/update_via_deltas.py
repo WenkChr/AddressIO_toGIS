@@ -1,4 +1,4 @@
-import os, sys,  requests, time, urllib, shutil, glob
+import os, sys,  requests, time, urllib, shutil, glob, time
 import pandas as pd
 from zipfile import ZipFile
 from arcgis import GeoAccessor
@@ -49,6 +49,7 @@ outGDB = r'H:\AddressIO_Home\workingGDB.gdb' #The GDB where the address range da
 stateURL = r'http://results.openaddresses.io/state.txt'
 #------------------------------------------------------------------------------------------------------------------------------------
 # function calls
+t0 = time.time()
 print('checking if state.txt url exists')
 check_url_exists(stateURL)
 stateRequest = requests.get(stateURL)
@@ -114,7 +115,7 @@ for dlfile in intZips:
                     provstoupdate.append(allPathParts[-2])
 
 print(f' Number of location files updates: {len(rows_to_download)}')
-
+provstoupdate = ['ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt']
 print('Province fcs to be updated: ', provstoupdate)
 for prov in provstoupdate:
     print('Updating:', prov)
@@ -122,8 +123,11 @@ for prov in provstoupdate:
     csvList = glob.glob(f'*.csv')
     print(f'Reading {len(csvList)} csv files into memory')
     dfFromEachFile = []
+    fieldDtypes = {'ID' : 'object', 'NUMBER' : 'object'}
     for f in csvList:
-        df = pd.read_csv(f, index_col= None, header=0)
+        df = pd.read_csv(f, index_col= None, header=0, dtype= fieldDtypes)
+        # sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LAT', y_column= 'LON')
+        # sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0]), overwrite= True)
         df['source'] = f
         dfFromEachFile.append(df)
     print('Concatonating all regional datasets')
@@ -131,5 +135,8 @@ for prov in provstoupdate:
     spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LAT', y_column= 'LON')
     print('Exporting full dataset')
     spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all'), overwrite= True)
+
+t1 = time.time()
+print(f'Total time taken to run script: {t1 - t0}')
 
 print('DONE!')
