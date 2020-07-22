@@ -4,6 +4,7 @@ from arcgis.features import GeoAccessor
 from arcgis.features import analysis
 
 
+
 #-----------------------------------------------------------------------------------
 #Inputs
 csdPath = r'H:\AddressIO_Home\lcsd000b16a_e.shp'
@@ -21,13 +22,14 @@ for prov in ['ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', '
         pointsDF = pd.DataFrame.spatial.from_featureclass(os.path.join(provFilesGDB, prov + '_all'))
         print(f'Get intersect count for each csd in {prov}')
         for row in csdProvDF.itertuples():
+                #Select csd and build bounding box
                 csddf = csdProvDF.loc[csdProvDF.CSDUID == row.CSDUID]
-                print(csddf.head())
+                df_extent = csdDF.spatial.full_extent
                 print(f'Creating spatial index for CSD: {row.CSDNAME}')
                 si = csdProvDF.spatial.sindex('quadtree', reset= False) # This kills you memory don't do this !!!!
                 print('Looking for intersects between csd and address points')
-                indexOfFeatures = pointsDF.intersect(bbox = si)
-                print(len(indexOfFeatures))
+                indexOfFeatures = si.intersect(bbox =csdProvDF.spatial.full_extent)
+                print(row.CSDNAME, len(indexOfFeatures))
                 sys.exit()
         print(csdProvDF.head())
         sys.exit()
