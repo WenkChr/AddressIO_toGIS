@@ -1,8 +1,9 @@
-import os, sys,  requests, time, urllib, shutil, glob, time
+import os, sys,  requests, time, urllib, shutil, glob, time, arcpy
 import pandas as pd
 from zipfile import ZipFile
 from arcgis import GeoAccessor
 
+arcpy.env.OverwriteOutput = True
 #--------------------------------------------------------------------------------------------------------------------------------------
 ''' Workflow Overview:
 1.) Download state.txt from openaddressIO and compare the address counts for each Canada file to the counts for the current csv files
@@ -47,6 +48,7 @@ Old_Data = 'H:\AddressIO_Home\openaddr-collected-north_america'
 outPath = 'H:\\AddressIO_Home' # This should be where the full AddressIO data should be located (unzipped)
 outGDB = r'H:\AddressIO_Home\workingGDB.gdb' #The GDB where the address range data is currently stored
 stateURL = r'http://results.openaddresses.io/state.txt'
+prjfile = r'H:\AddressIO_Scripts\PCS_Projection.prj' 
 #------------------------------------------------------------------------------------------------------------------------------------
 # function calls
 t0 = time.time()
@@ -113,10 +115,10 @@ for dlfile in intZips:
                     shutil.copyfileobj(zf, of)
                 if allPathParts[-2] not in provstoupdate:
                     provstoupdate.append(allPathParts[-2])
-
 print(f' Number of location files updates: {len(rows_to_download)}')
+
 provstoupdate = ['ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt']
-print('Province fcs to be updated: ', provstoupdate)
+print('Province fcs to be updated:', provstoupdate)
 for prov in provstoupdate:
     print('Updating:', prov)
     os.chdir(os.path.join(Old_Data, 'ca', prov))
@@ -126,17 +128,30 @@ for prov in provstoupdate:
     fieldDtypes = {'ID' : 'object', 'NUMBER' : 'object'}
     for f in csvList:
         df = pd.read_csv(f, index_col= None, header=0, dtype= fieldDtypes)
-        # sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LAT', y_column= 'LON')
-        # sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0]), overwrite= True)
+        print(f)
+        # sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LON', y_column= 'LAT')
+        # sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0].replace('-', '_')), overwrite= True)
         df['source'] = f
         dfFromEachFile.append(df)
     print('Concatonating all regional datasets')
     concatDF = pd.concat(dfFromEachFile, ignore_index= True)
-    spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LAT', y_column= 'LON')
+    spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LON', y_column= 'LAT')
+    #print('Reprojecting sdf into NAD83')
+    #spatialConcatDF.spatial.project(spatial_reference= arcpy.SpatialReference('GCS_North_American_1983_CSRS'), transformation_name='NAD_1983_To_WGS_1984_1')
     print('Exporting full dataset')
-    spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all'), overwrite= True)
+    spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all_84'), overwrite= True)
+    print(f'Reprojecting {prov}_all_84 to PCS_Lambert_Conformal_Conic')
+    
+# Converts all provincial/Territorial datasets into NGD projection
+arcpy.env.workspace = outGDB
+for fc in arcpy.ListFeatureClasses():
+    if fc.endswith('_all_84'):
+        print(f'Reprojecting {fc} to PCS_Lambert_Conformal_Conic')
+        project_df = pd.DataFrame.spatial.from_featureclass(os.path.join(outGDB, f'{fc}'), sr= arcpy.SpatialReference(prjfile))
+        project_df.spatial.to_featureclass(os.path.join(outGDB, f'{fc}_all'), overwrite= True)
+        #arcpy.Delete_management(os.path.join(outGDB, f'{fc}'))
 
-t1 = time.time()
-print(f'Total time taken to run script: {t1 - t0}')
+t1 = time.time() 
+print(f'Total time taken to run script: {round((t1 - t0)/60, 2)} min')
 
 print('DONE!')
