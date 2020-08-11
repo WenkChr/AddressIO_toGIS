@@ -1,17 +1,26 @@
-import os ,sys
+import os ,sys, arcpy, time
 import pandas as pd
 from arcgis.features import GeoAccessor
 from arcgis.features import analysis
 
+#-----------------------------------------------------------------------------------
+#Functions
 
+def projectFC(fc, outGDB, outName, outSpatRef):
+        inSpatRef = arcpy.Describe(fc).spatialReference
+        transform = arcpy.ListTransformations(arcpy.Describe(fc).spatialReference, outSpatRef)
+        if len(transform) != 0:
+                arcpy.env.geographicTransformation = transform[0]
+        arcpy.Project_management(fc, os.path.join(outGDB, outName), outSpatRef, transform_method= transform[0])
+        return os.path.join(outGDB, outName)
 
 #-----------------------------------------------------------------------------------
 #Inputs
 csdPath = r'H:\AddressIO_Home\lcsd000b16a_e.shp'
-provFilesGDB = r'H:\AddressIO_Home\workingGDB.gdb' 
-
+provFilesGDB = r'H:\AddressIO_Home\workingGDB.gdb'
 #-----------------------------------------------------------------------------------
 # Logic
+t0 = time.time()
 prCodes = {'ab' : 48, 'bc' : 59, 'mb' : 46, 'nb' : 13, 'nl' : 10, 'ns' : 12, 'on' : 35, 
         'qc' : 24, 'sk' : 47, 'yt' : 60, 'pe' : 11, 'nt' : 61, 'nu' : 62}
 print('Reading CSD file into memory')
@@ -33,5 +42,6 @@ for prov in ['ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', '
                 sys.exit()
         print(csdProvDF.head())
         sys.exit()
-
+t1 = time.time() 
+print(f'Total time taken to run script: {round((t1 - t0)/60, 2)} min')
 print('DONE!')
