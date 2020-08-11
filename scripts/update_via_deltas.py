@@ -3,7 +3,7 @@ import pandas as pd
 from zipfile import ZipFile
 from arcgis import GeoAccessor
 
-arcpy.env.OverwriteOutput = True
+arcpy.env.overwriteOutput = True
 #--------------------------------------------------------------------------------------------------------------------------------------
 ''' Workflow Overview:
 1.) Download state.txt from openaddressIO and compare the address counts for each Canada file to the counts for the current csv files
@@ -136,20 +136,17 @@ for prov in provstoupdate:
     print('Concatonating all regional datasets')
     concatDF = pd.concat(dfFromEachFile, ignore_index= True)
     spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LON', y_column= 'LAT')
-    #print('Reprojecting sdf into NAD83')
-    #spatialConcatDF.spatial.project(spatial_reference= arcpy.SpatialReference('GCS_North_American_1983_CSRS'), transformation_name='NAD_1983_To_WGS_1984_1')
     print('Exporting full dataset')
-    spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all_84'), overwrite= True)
+    spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all_84'), overwrite= True, )
     print(f'Reprojecting {prov}_all_84 to PCS_Lambert_Conformal_Conic')
-    
 # Converts all provincial/Territorial datasets into NGD projection
 arcpy.env.workspace = outGDB
 for fc in arcpy.ListFeatureClasses():
     if fc.endswith('_all_84'):
         print(f'Reprojecting {fc} to PCS_Lambert_Conformal_Conic')
-        project_df = pd.DataFrame.spatial.from_featureclass(os.path.join(outGDB, f'{fc}'), sr= arcpy.SpatialReference(prjfile))
-        project_df.spatial.to_featureclass(os.path.join(outGDB, f'{fc}_all'), overwrite= True)
+        arcpy.Project_management(os.path.join(outGDB, fc), os.path.join(outGDB, fc[:6]), arcpy.SpatialReference(prjfile), transform_method= 'NAD_1983_to_WGS_1984_1')
         #arcpy.Delete_management(os.path.join(outGDB, f'{fc}'))
+        
 
 t1 = time.time() 
 print(f'Total time taken to run script: {round((t1 - t0)/60, 2)} min')
