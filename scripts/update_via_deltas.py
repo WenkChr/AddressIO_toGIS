@@ -138,14 +138,13 @@ for prov in provstoupdate:
     spatialConcatDF = pd.DataFrame.spatial.from_xy(concatDF, x_column= 'LON', y_column= 'LAT')
     print('Exporting full dataset')
     spatialConcatDF.spatial.to_featureclass(os.path.join(outGDB, f'{prov}_all_84'), overwrite= True, )
-    print(f'Reprojecting {prov}_all_84 to PCS_Lambert_Conformal_Conic')
-# Converts all provincial/Territorial datasets into NGD projection
+# Convert all provincial/Territorial datasets into NGD projection (Lambert Conformal Conic)
 arcpy.env.workspace = outGDB
 for fc in arcpy.ListFeatureClasses():
     if fc.endswith('_all_84'):
         print(f'Reprojecting {fc} to PCS_Lambert_Conformal_Conic')
         arcpy.Project_management(os.path.join(outGDB, fc), os.path.join(outGDB, fc[:6]), arcpy.SpatialReference(prjfile), transform_method= 'NAD_1983_to_WGS_1984_1')
-        #arcpy.Delete_management(os.path.join(outGDB, f'{fc}'))
+        arcpy.Delete_management(os.path.join(outGDB, f'{fc}'))
         
 
 t1 = time.time() 
