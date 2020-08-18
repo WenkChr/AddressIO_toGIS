@@ -1,7 +1,6 @@
 import os ,sys, arcpy, time
 import pandas as pd
 from arcgis.features import GeoAccessor
-from arcgis.features import analysis
 
 arcpy.env.overwriteOutput = True
 #-----------------------------------------------------------------------------------
@@ -28,13 +27,13 @@ t0 = time.time()
 prCodes = {'ab' : 48, 'bc' : 59, 'mb' : 46, 'nb' : 13, 'nl' : 10, 'ns' : 12, 'on' : 35, 
         'qc' : 24, 'sk' : 47, 'yt' : 60, 'pe' : 11, 'nt' : 61, 'nu' : 62}
 # Loop to create provincial spatial joins in the scratch gdb
-# for prov in ('ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt', 'nu'):
-#         provfc = os.path.join(workingGDB, f'{prov}_all')
-#         if not arcpy.Exists(provfc): continue #IF a file does not exist for a province then ignore it
-#         print(f'Creating coverage for {prov}')
-#         #csdlyr = arcpy.MakeFeatureLayer_management(csdPath, where_clause= f"PRUID = '{str(prCodes[prov])}'")
-#         alyr = arcpy.MakeFeatureLayer_management(os.path.join(workingGDB, f'{prov}_all'))
-#         arcpy.SpatialJoin_analysis(alyr, csdPath, os.path.join(scratchGDB, f'{prov}_sj'))
+for prov in ('ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt', 'nu'):
+        provfc = os.path.join(workingGDB, f'{prov}_all')
+        if not arcpy.Exists(provfc): continue #IF a file does not exist for a province then ignore it
+        print(f'Creating coverage for {prov}')
+        #csdlyr = arcpy.MakeFeatureLayer_management(csdPath, where_clause= f"PRUID = '{str(prCodes[prov])}'")
+        alyr = arcpy.MakeFeatureLayer_management(os.path.join(workingGDB, f'{prov}_all'))
+        arcpy.SpatialJoin_analysis(alyr, csdPath, os.path.join(scratchGDB, f'{prov}_sj'))
 count_series = []
 for prov in ('on', 'ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'qc', 'sk', 'yt', 'pe', 'nt', 'nu'): # 'on' removed because of memory issues loading points into memory
         if not arcpy.Exists(os.path.join(scratchGDB, f'{prov}_sj')): continue
