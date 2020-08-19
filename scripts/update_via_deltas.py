@@ -116,8 +116,6 @@ for dlfile in intZips:
                 if allPathParts[-2] not in provstoupdate:
                     provstoupdate.append(allPathParts[-2])
 print(f' Number of location files updates: {len(rows_to_download)}')
-
-provstoupdate = ['ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt']
 print('Province fcs to be updated:', provstoupdate)
 for prov in provstoupdate:
     print('Updating:', prov)
@@ -129,8 +127,9 @@ for prov in provstoupdate:
     for f in csvList:
         df = pd.read_csv(f, index_col= None, header=0, dtype= fieldDtypes)
         print(f)
-        # sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LON', y_column= 'LAT')
-        # sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0].replace('-', '_')), overwrite= True)
+        # If you want individual feature classes for each source csv uncomment the below two rows
+        sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LON', y_column= 'LAT')
+        sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0].replace('-', '_')), overwrite= True)
         df['source'] = f
         dfFromEachFile.append(df)
     print('Concatonating all regional datasets')
