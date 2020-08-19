@@ -4,17 +4,6 @@ from arcgis.features import GeoAccessor
 
 arcpy.env.overwriteOutput = True
 #-----------------------------------------------------------------------------------
-#Functions
-
-def projectFC(fc, outGDB, outName, outSpatRef):
-        inSpatRef = arcpy.Describe(fc).spatialReference
-        transform = arcpy.ListTransformations(arcpy.Describe(fc).spatialReference, outSpatRef)
-        if len(transform) != 0:
-                arcpy.env.geographicTransformation = transform[0]
-        arcpy.Project_management(fc, os.path.join(outGDB, outName), outSpatRef, transform_method= transform[0])
-        return os.path.join(outGDB, outName)
-
-#-----------------------------------------------------------------------------------
 #Input
 homepath = r'H:\AddressIO_Home'
 csdPath = r'H:\AddressIO_Home\lcsd000b16a_e.shp'
@@ -30,8 +19,7 @@ prCodes = {'ab' : 48, 'bc' : 59, 'mb' : 46, 'nb' : 13, 'nl' : 10, 'ns' : 12, 'on
 for prov in ('ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt', 'nu'):
         provfc = os.path.join(workingGDB, f'{prov}_all')
         if not arcpy.Exists(provfc): continue #IF a file does not exist for a province then ignore it
-        print(f'Creating coverage for {prov}')
-        #csdlyr = arcpy.MakeFeatureLayer_management(csdPath, where_clause= f"PRUID = '{str(prCodes[prov])}'")
+        print(f'Creating spatial join between CSDs and {prov}')
         alyr = arcpy.MakeFeatureLayer_management(os.path.join(workingGDB, f'{prov}_all'))
         arcpy.SpatialJoin_analysis(alyr, csdPath, os.path.join(scratchGDB, f'{prov}_sj'))
 count_series = []
