@@ -22,17 +22,19 @@ def buildGDB(outPath, gdb_name, feature_datasets=[], spatial_ref = arcpy.Spatial
 
     return gdb_path
 
-def batch_csv_to_fc(start_path, outGDB, x, y):
+def batch_csv_to_fc(start_path, outGDB, x, y, prj):
     
-    def csv_to_fc(csv, outGDB, out_name, x, y):
+    def csv_to_fc(csv, outGDB, out_name, x, y, oprj):
         out_fc = os.path.join(outGDB, out_name)
         if arcpy.Exists(out_fc):
             print('File already exists moving onto next one')
             return out_fc 
         table = arcpy.TableToTable_conversion(csv, os.path.split(outGDB)[0], out_name + '_table')
         xyl = arcpy.MakeXYEventLayer_management(table, x, y, 'xyl')
-        arcpy.FeatureClassToFeatureClass_conversion(xyl, outGDB, out_name)
+        fc84 = arcpy.FeatureClassToFeatureClass_conversion(xyl, outGDB, out_name + '_84')
+        arcpy.Project_management(fc84, os.path.join(outGDB, out_name), arcpy.SpatialReference(oprj))
         arcpy.Delete_management(table)
+
         return out_fc
     
     # dict for all fc's sorted by province into a specific list
@@ -50,7 +52,7 @@ def batch_csv_to_fc(start_path, outGDB, x, y):
                 if fc_name == 'province':
                     fc_name =  prov_abbv + '_province'
                 out_location = os.path.join(outGDB, prov_abbv) 
-                current_fc = csv_to_fc(f_path, out_location, fc_name, x, y)
+                current_fc = csv_to_fc(f_path, out_location, fc_name, x, y, prj)
                 prov_files[prov_abbv].append(current_fc) 
                 arcpy.AddField_management( current_fc, 'SOURCE', 'TEXT')
                 arcpy.CalculateField_management(current_fc, 'SOURCE', expression= "'" + f + "'", expression_type= 'PYTHON3')
@@ -76,9 +78,10 @@ out_path = 'H:\\AddressIO_Home'
 start_path = r'H:\AddressIO_Home\openaddr-collected-north_america\ca'
 provs = ['bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'nl', 'nt', 'pe', 'yt', 'nu']
 IO_essential_fields = ['OBJECTID', 'LAT', 'LON', 'NUMBER', 'STREET', 'UNIT', 'CITY', 'POSTCODE', 'SOURCE']
+prjFile = r'H:\AddressIO_Scripts\PCS_Projection.prj' 
 # Calls
 working_gdb = buildGDB(out_path, 'workingGDB', feature_datasets= provs)
-#batch_csv_to_fc(start_path, working_gdb, 'LON', 'LAT')
+batch_csv_to_fc(start_path, working_gdb, 'LON', 'LAT', prjFile)
 merge_all_in_fds(working_gdb, working_gdb, common_essential_fields= IO_essential_fields)
 
 print('DONE!')
