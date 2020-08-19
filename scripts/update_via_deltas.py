@@ -1,4 +1,4 @@
-import os, sys,  requests, time, urllib, shutil, glob, time, arcpy
+import os, sys,  requests, urllib, shutil, glob, time, arcpy
 import pandas as pd
 from zipfile import ZipFile
 from arcgis import GeoAccessor
