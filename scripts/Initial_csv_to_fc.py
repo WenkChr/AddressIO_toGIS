@@ -1,7 +1,9 @@
 import sys, os, arcpy
+from dotenv import load_dotenv
 
 arcpy.env.overwriteOutput = True
 
+#------------------------------------------------------------------------------------------------------------------
 # Functions
 
 def delete_non_essential_fields(fc, essential_fields):
@@ -71,14 +73,17 @@ def merge_all_in_fds(path_to_gdb, outGDB, common_essential_fields,
         
         arcpy.Merge_management(fc_files_w_path, os.path.join(outGDB, prov + '_all'))
 
+#-----------------------------------------------------------------------------------------------
 # Constants
 spatial_ref = arcpy.SpatialReference('WGS 1984')
-sourceZip = r'https://data.openaddresses.io/openaddr-collected-north_america.zip'
-out_path = 'H:\\AddressIO_Home'
-start_path = r'H:\AddressIO_Home\openaddr-collected-north_america\ca'
-provs = ['bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'nl', 'nt', 'pe', 'yt', 'nu']
-IO_essential_fields = ['OBJECTID', 'LAT', 'LON', 'NUMBER', 'STREET', 'UNIT', 'CITY', 'POSTCODE', 'SOURCE']
-prjFile = r'H:\AddressIO_Scripts\PCS_Projection.prj' 
+sourceZip = os.getenv('SOURCE_ZIP')
+out_path = os.getenv('OUT_DIR')
+start_path = os.getenv('START_PATH')
+provs = os.getenv('PROVS')
+IO_essential_fields = os.getenv('IO_ESS_FIELDS')
+prjFile = os.getenv('PRJ_FILE')
+
+#-----------------------------------------------------------------------------------------------
 # Calls
 working_gdb = buildGDB(out_path, 'workingGDB', feature_datasets= provs)
 batch_csv_to_fc(start_path, working_gdb, 'LON', 'LAT', prjFile)
