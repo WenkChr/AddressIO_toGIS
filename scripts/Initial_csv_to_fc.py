@@ -75,6 +75,8 @@ def merge_all_in_fds(path_to_gdb, outGDB, common_essential_fields,
 
 #-----------------------------------------------------------------------------------------------
 # Constants
+BASEDIR = os.getcwd()
+load_dotenv(os.path.join(BASEDIR, 'environments.env'))
 spatial_ref = arcpy.SpatialReference('WGS 1984')
 sourceZip = os.getenv('SOURCE_ZIP')
 out_path = os.getenv('OUT_DIR')
