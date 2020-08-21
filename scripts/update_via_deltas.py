@@ -135,7 +135,7 @@ for prov in provstoupdate:
         fc_name = os.path.split(f)[1].split('.')[0].replace('-', '_')
         if fc_name == 'province':
             fc_name = f'{prov}_province'
-        sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0].replace('-', '_')), overwrite= True)
+        sdf.spatial.to_featureclass(os.path.join(outGDB, prov, fc_name), overwrite= True)
         df['source'] = f
         dfFromEachFile.append(df)
     print('Concatonating all regional datasets')
