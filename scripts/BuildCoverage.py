@@ -1,20 +1,27 @@
 import os ,sys, arcpy, time
 import pandas as pd
 from arcgis.features import GeoAccessor
-
+from dotenv import load_dotenv
+from pathlib import Path
 arcpy.env.overwriteOutput = True
 #-----------------------------------------------------------------------------------
 #Input
-homepath = r'H:\AddressIO_Home'
-csdPath = r'H:\AddressIO_Home\lcsd000b16a_e.shp'
-provFilesGDB = r'H:\AddressIO_Home\workingGDB.gdb'
-workingGDB = r'H:\AddressIO_Home\workingGDB.gdb'
-scratchGDB = r'H:\AddressIO_Home\scratch.gdb'
+BASEDIR = os.getcwd()
+load_dotenv(os.path.join(BASEDIR, 'environments.env'))
+homepath = os.getenv('OUT_DIR')
+csdPath = os.getenv('CSD_PATH')
+provFilesGDB = os.path.join(Path(os.getenv('OUT_DIR')), 'workingGDB.gdb')
+workingGDB = os.path.join(Path(os.getenv('OUT_DIR')), 'workingGDB.gdb')
+scratchGDB = os.getenv('SCRATCH_GDB')
 #-----------------------------------------------------------------------------------
 # Logic
 t0 = time.time()
 prCodes = {'ab' : 48, 'bc' : 59, 'mb' : 46, 'nb' : 13, 'nl' : 10, 'ns' : 12, 'on' : 35, 
         'qc' : 24, 'sk' : 47, 'yt' : 60, 'pe' : 11, 'nt' : 61, 'nu' : 62}
+#Create scratch GDB if it doesn't exist
+if not arcpy.Exists(scratchGDB):
+        print('Creating Scratch GDB')
+        arcpy.CreateFileGDB_management(os.path.split(scratchGDB)[0], os.path.split(scratchGDB)[1])
 # Loop to create provincial spatial joins in the scratch gdb
 for prov in ('ab', 'bc', 'mb', 'nb', 'nl', 'ns', 'on', 'qc', 'sk', 'yt', 'pe', 'nt', 'nu'):
         provfc = os.path.join(workingGDB, f'{prov}_all')
