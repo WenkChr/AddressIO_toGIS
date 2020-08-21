@@ -1,8 +1,9 @@
 import os, sys,  requests, urllib, shutil, glob, time, arcpy
 import pandas as pd
+from pathlib import Path
 from zipfile import ZipFile
 from arcgis import GeoAccessor
-
+from dotenv import load_dotenv
 arcpy.env.overwriteOutput = True
 #--------------------------------------------------------------------------------------------------------------------------------------
 ''' Workflow Overview:
@@ -41,14 +42,16 @@ def splitall(path):
     return allparts
 #--------------------------------------------------------------------------------------------------------------------------------
 # inputs
-Data_GDB = 'H:\\AddressIO_Home\\workingGDB.gdb'
-OpenIO_zip = "https://data.openaddresses.io/openaddr-collected-north_america.zip"
-intermediateZipFolder = 'H:\\AddressIO_Home\\IntermediateZips'
-Old_Data = 'H:\AddressIO_Home\openaddr-collected-north_america'
-outPath = 'H:\\AddressIO_Home' # This should be where the full AddressIO data should be located (unzipped)
-outGDB = r'H:\AddressIO_Home\workingGDB.gdb' #The GDB where the address range data is currently stored
-stateURL = r'http://results.openaddresses.io/state.txt'
-prjfile = r'H:\AddressIO_Scripts\PCS_Projection.prj' 
+BASEDIR = os.getcwd()
+load_dotenv(os.path.join(r'H:\AddressIO_Scripts\scripts' , 'environments.env'))
+Data_GDB = os.path.join(Path(os.getenv('OUT_DIR')), 'workingGDB.gdb')
+OpenIO_zip = os.getenv('SOURCE_ZIP')
+intermediateZipFolder = os.getenv('INT_ZIP_DIR')
+Old_Data = os.getenv('OLD_DATA')
+outPath = os.getenv('OUT_DIR')
+outGDB = Data_GDB
+stateURL = os.getenv('STATE_URL')
+prjfile = Path(os.getenv('PRJ_FILE'))
 #------------------------------------------------------------------------------------------------------------------------------------
 # function calls
 t0 = time.time()
