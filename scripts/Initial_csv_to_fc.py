@@ -36,7 +36,7 @@ def batch_csv_to_fc(start_path, outGDB, x, y, prj):
         fc84 = arcpy.FeatureClassToFeatureClass_conversion(xyl, outGDB, out_name + '_84')
         arcpy.Project_management(fc84, os.path.join(outGDB, out_name), arcpy.SpatialReference(oprj))
         arcpy.Delete_management(table)
-
+        arcpy.Delete_management(fc84)
         return out_fc
     
     # dict for all fc's sorted by province into a specific list
