@@ -132,6 +132,9 @@ for prov in provstoupdate:
         print(f)
         # If you want individual feature classes for each source csv uncomment the below two rows
         sdf = pd.DataFrame.spatial.from_xy(df, x_column= 'LON', y_column= 'LAT')
+        fc_name = os.path.split(f)[1].split('.')[0].replace('-', '_')
+        if fc_name == 'province':
+            fc_name = f'{prov}_province'
         sdf.spatial.to_featureclass(os.path.join(outGDB, prov, os.path.split(f)[1].split('.')[0].replace('-', '_')), overwrite= True)
         df['source'] = f
         dfFromEachFile.append(df)
